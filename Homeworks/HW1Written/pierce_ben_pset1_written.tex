@@ -1,0 +1,145 @@
+\documentclass[english]{article}
+\usepackage[T1]{fontenc}
+%\usepackage[latin9]{inputenc}
+\usepackage{geometry}
+\geometry{verbose,tmargin=1cm,bmargin=2cm,lmargin=1cm,rmargin=1cm}
+\setlength{\parindent}{0bp}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\PassOptionsToPackage{normalem}{ulem}
+\usepackage{ulem}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\hypersetup{
+	colorlinks = True,
+	linkcolor = blue,
+	anchorcolor = blue,
+	citecolor = blue,
+	filecolor = blue,
+	urlcolor = blue
+}
+\usepackage{amsthm}
+
+\newtheorem{definition}{Definition}
+
+\renewcommand\thesubsection{\Alph{subsection}}
+\makeatletter
+\date{}
+
+\makeatother
+
+\usepackage{babel}
+\begin{document}
+\title{MAE 243 Written \#1}
+\author{Benjamin Pierce \\ \href{mailto:bepierce@ucsd.edu}{bepierce@ucsd.edu}}
+\date{\today} 
+\maketitle
+
+\section{Problem 1}
+\begin{enumerate}
+\item State whether the problem is convex or not. Justify your answer
+\item State whether you should use a linear programming solver, a mixed integer linear programming
+solver, or a nonlinear solver
+\item Assume that $c_1, c_2, d_1, d_2, d_3 > 0$
+\end{enumerate}
+\subsection{}
+    \begin{align*}
+    & \min_x c^T x \\ 
+    & s.t. \ \ Ax > b \\
+     & x_i \in [0, 1], \forall i = 1,...,n
+    \end{align*}
+    This problem is convex because both the objective function and the feasible region are themselves convex. Since the values of the decision variable $x$ are $[0,1]$, a mixed integer LP solver shoud be used.
+
+\subsection{} % TODO
+    \begin{align*}
+    & \min_{x, y} c_1 x + c_2 y\\ 
+    & s.t. \ \ d_1 x^2 + d_2 y^2 \leq d_3 \\
+     & x,y \geq 0
+    \end{align*} 
+    This problem is convex (as both the objective and constraints are convex functions), but since the constraints include a squared term, it's a quadratic programming problem, which you'd need a nonlinear solver for.
+    
+ \subsection{}
+     \begin{align*}
+     & \min_{x, y} c_1 x + c_2 xy\\ 
+     & s.t. \ \ d_1 x + d_2 y \leq d_3 \\
+      & x,y \geq 0
+     \end{align*} 
+    Due to the $c_2 x y$ term, the objective function is nonlinear and nonconvex as the Hessian of $c_1x + c_2 xy$ is 
+    $\big(\begin{smallmatrix}
+      0 & c_2\\
+      c_2 & 0
+    \end{smallmatrix}\big)$, which is \textbf{not} positive semi-definite.
+    You would therefore have to use a nonlinear solver. 
+
+\section{Problem 2}
+Consider the optimization problem:
+$$
+\begin{array}{ll}
+\max _{x, y} & 10 x+5 y \\
+\text { s.t. } & 2 x+5 y \leq 50, \\
+& 5 x+y \leq 30 \\
+& 8 \geq x \geq 2, \\
+& y \geq 0
+\end{array}
+$$
+\subsection{}
+The model gives the output as following:
+\begin{verbatim}
+Objective: 84.78260869565219
+Value of x: 4.347826086956522
+Value of y: 8.26086956521739
+\end{verbatim}
+\subsection{}
+%To convert a LP to standard form, we need to ensure the following:
+%\begin{enumerate}
+%\item All variables have non-negativity constraints
+%\item All other constraints are expressed as equalities
+%\item The right-hand side of each constraint is non-negative.
+%\item The problem is a minimization
+%\end{enumerate}
+We can convert this to standard form with slack variables $s_i$:
+$$
+\begin{aligned}
+\min _{x, y} & -(10 x+5 y) \\
+\text { s.t. } & 2 x+5 y+s_1=50 \\
+& 5 x+y+s_2=30 \\
+& x + s_3=8\\
+& x - s_4 =2 \\
+& x, y, s_1, s_2, s_3, s_4 \geq 0
+\end{aligned}
+$$
+This can then be written in matrix notation: 
+$$
+\begin{aligned}
+\min _{x}\ \ & c^Tx \\
+& \text { s.t. } & Ax = b \\
+& x \geq 0
+\end{aligned}
+$$
+Where:
+$$
+\mathbf{A} = \begin{bmatrix}
+2 & 5 & 1 & 0 & 0 & 0 \\
+5 & 1 & 0 & 1 & 0 & 0 \\
+1 & 0 & 0 & 0 & 1 & 0 \\
+1 & 0 & 0 & 0 & 0 & -1 \\
+\end{bmatrix}
+$$
+and $b = [50, 30, 8, 2]^T$, $x = [x, y, s_1, s_2, s_3, s_4]^T$.
+
+
+\subsection{}
+Using the matrix $\mathbf{A}$, we see that our slack variables $s_1, s_2,s_3, s_4$ are basic, whereas our decision variables $x, y$ are non-basic, as they have more then one element per column of $\mathbf{A}$ corresponding with them. 
+
+\subsection{}
+If we use the duals from JuMP, we find the first two constraints to be binding. 
+\begin{verbatim}
+2-element Array{ConstraintRef,1}:
+ c1 : 2 x + 5 y ≤ 50.0
+ c2 : 5 x + y ≤ 30.0
+\end{verbatim}
+Which is sensible, as $x$ and $y$ are non-basic
+\end{document}
